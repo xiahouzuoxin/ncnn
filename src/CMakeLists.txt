@@ -17,6 +17,7 @@ set(ncnn_SRCS
     net.cpp
     opencv.cpp
     paramdict.cpp
+	im2col.cpp
 )
 
 macro(ncnn_add_layer class)
