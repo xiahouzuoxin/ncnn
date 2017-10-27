@@ -149,7 +149,11 @@ void copy_cut_border(const Mat& src, Mat& dst, int top, int bottom, int left, in
 void resize_bilinear(const Mat& src, Mat& dst, int w, int h);
 
 // the alignment of all the allocated buffers
+#if (!NCNN_ALIGNMEM) || NCNN_EIGEN
+#define MALLOC_ALIGN    4
+#else
 #define MALLOC_ALIGN    16
+#endif
 
 // Aligns a pointer to the specified number of bytes
 // ptr Aligned pointer
@@ -276,7 +280,7 @@ inline Mat::Mat(int _w, int _h, int _c, float* _data)
     h = _h;
     c = _c;
 
-    cstep = alignSize(w * h * sizeof(float), 16) >> 2;
+    cstep = alignSize(w * h * sizeof(float), MALLOC_ALIGN) >> 2;
 }
 
 inline Mat::~Mat()
@@ -412,7 +416,7 @@ inline Mat Mat::reshape(int _w, int _h, int _c) const
 
     if (dims < 3)
     {
-        if ((size_t)_w * _h != alignSize(_w * _h * sizeof(float), 16) >> 2)
+        if ((size_t)_w * _h != alignSize(_w * _h * sizeof(float), MALLOC_ALIGN) >> 2)
         {
             Mat m;
             m.create(_w, _h, _c);
@@ -443,7 +447,7 @@ inline Mat Mat::reshape(int _w, int _h, int _c) const
     m.h = _h;
     m.c = _c;
 
-    m.cstep = alignSize(_w * _h * sizeof(float), 16) >> 2;
+    m.cstep = alignSize(_w * _h * sizeof(float), MALLOC_ALIGN) >> 2;
 
     return m;
 }
@@ -500,7 +504,7 @@ inline void Mat::create(int _w, int _h, int _c)
     h = _h;
     c = _c;
 
-    cstep = alignSize(w * h * sizeof(float), 16) >> 2;
+    cstep = alignSize(w * h * sizeof(float), MALLOC_ALIGN) >> 2;
 
     if (total() > 0)
     {

@@ -13,6 +13,9 @@
 // specific language governing permissions and limitations under the License.
 
 #include "convolution.h"
+#if EIGEN
+#include "Eigen/Dense"
+#endif
 
 namespace ncnn {
 

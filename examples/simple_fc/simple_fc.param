@@ -1,0 +1,4 @@
+7767517
+2 2
+Input            data             0 1 data 0=1 1=1 2=3
+InnerProduct     fc1              1 1 data fc1 0=4 1=0 2=12

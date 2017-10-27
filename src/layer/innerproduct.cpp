@@ -13,6 +13,9 @@
 // specific language governing permissions and limitations under the License.
 
 #include "innerproduct.h"
+#if NCNN_EIGEN
+#include "Eigen/Dense"
+#endif
 
 namespace ncnn {
 
@@ -212,6 +215,17 @@ int InnerProduct::forward(const Mat& bottom_blob, Mat& top_blob) const
         return -100;
 
     // num_output
+#if NCNN_EIGEN
+	typedef Eigen::Matrix<float, Eigen::Dynamic,Eigen::Dynamic, Eigen::RowMajor> Matrix;
+	Eigen::Map<Matrix> _weight(weight_data.data,num_output,channels);
+	Eigen::Map<Matrix> _bottom(bottom_blob.data,channels*size,1);
+	Eigen::Map<Matrix> _top(top_blob.data,num_output,1);
+	_top = _weight * _bottom;
+	if (bias_term) {
+		Eigen::Map<Matrix> _bias(bias_data.data,num_output,1);
+		_top += _bias;
+	}
+#else
     const float* weight_data_ptr = weight_data;
     #pragma omp parallel for
     for (int p=0; p<num_output; p++)
@@ -236,6 +250,7 @@ int InnerProduct::forward(const Mat& bottom_blob, Mat& top_blob) const
 
         outptr[0] = sum;
     }
+#endif // NCNN_EIGEN
 
     return 0;
 }
