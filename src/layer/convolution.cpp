@@ -14,7 +14,7 @@
 
 #include "convolution.h"
 #include "im2col.h"
-#if EIGEN
+#if NCNN_EIGEN
 #include "Eigen/Dense"
 #endif
 
@@ -221,6 +221,32 @@ int Convolution::forward(const Mat& bottom_blob, Mat& top_blob) const
 
     const int kernel_extent = dilation * (kernel_size - 1) + 1;
 
+#if NCNN_EIGEN
+    int outw = (w + 2 * pad - kernel_extent) / stride + 1;
+    int outh = (h + 2 * pad - kernel_extent) / stride + 1;
+
+    top_blob.create(outw, outh, num_output);
+    if (top_blob.empty())
+        return -100;
+
+    int _size_out = outh * outw;
+    int _size_ckk = channels * kernel_size * kernel_size;
+    Mat _btm_im2col(_size_ckk, _size_out);
+    im2col_cpu<float>(bottom_blob.data, channels, h, w, kernel_size, kernel_size,
+            pad, pad, stride, stride, dilation, dilation, _btm_im2col.data);
+
+    typedef Eigen::Matrix<float, Eigen::Dynamic,Eigen::Dynamic, Eigen::RowMajor> Matrix;
+    Eigen::Map<Matrix> _weight(weight_data.data,num_output,_size_ckk);
+    Eigen::Map<Matrix> _bottom(_btm_im2col.data,_size_ckk,_size_out);
+	Eigen::Map<Matrix> _top(top_blob.data,num_output,_size_out);
+	_top = _weight * _bottom;
+
+	if (bias_term) {
+		Eigen::Map<Eigen::VectorXf> _bias(bias_data.data,num_output);
+		_top.colwise() += _bias;
+	}
+
+#else
     Mat bottom_blob_bordered = bottom_blob;
     if (pad > 0)
     {
@@ -314,6 +340,7 @@ int Convolution::forward(const Mat& bottom_blob, Mat& top_blob) const
             outptr += outw;
         }
     }
+#endif
 
     return 0;
 }
