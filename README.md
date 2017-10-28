@@ -1,3 +1,10 @@
+# eigen-optimized ncnn
+
+```
+mkdir build && cd build
+cmake ../ -DNCNN_EIGEN=ON
+```
+
 # ncnn
 
 [![License](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](https://raw.githubusercontent.com/Tencent/ncnn/master/LICENSE.txt) 

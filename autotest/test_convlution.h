@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include "gtest/gtest.h"
 #include "layer/convolution.h"
 using namespace ncnn;
@@ -62,7 +63,7 @@ TEST(convolution, forward)
     EXPECT_EQ(mat_out.w, 2);
     EXPECT_EQ(mat_out.h, 2);
     EXPECT_EQ(mat_out.c, 1);
-    for (int i = 0; i < _countof(expected_out); ++i)
+    for (int i = 0; i < sizeof(expected_out)/sizeof(expected_out[0]); ++i)
     {
         EXPECT_NEAR(mat_out[i], expected_out[i], 1E-5);
     }

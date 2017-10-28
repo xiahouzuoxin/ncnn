@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include "gtest/gtest.h"
 #include "layer/innerproduct.h"
 
@@ -47,7 +48,7 @@ TEST(innerproduct, forward)
 
     // check expect
     EXPECT_EQ(mat_out.c, 2);
-    for (int i = 0; i < _countof(expected_out); ++i)
+    for (int i = 0; i < sizeof(expected_out)/sizeof(expected_out[0]); ++i)
     {
         float output_value = *(mat_out.data + mat_out.cstep * i);
         EXPECT_NEAR(output_value, expected_out[i], 1E-5);
