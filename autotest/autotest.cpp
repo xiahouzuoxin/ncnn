@@ -8,6 +8,7 @@
 #include "platform.h"
 
 #include "test_convlution.h"
+#include "test_deconvolution.h"
 #include "test_innerproduct.h"
 #include "gtest/gtest.h"
 

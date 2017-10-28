@@ -231,13 +231,13 @@ int Convolution::forward(const Mat& bottom_blob, Mat& top_blob) const
 
     int _size_out = outh * outw;
     int _size_ckk = channels * kernel_size * kernel_size;
-    Mat _btm_im2col(_size_ckk, _size_out);
+    Mat _btm_col(_size_ckk, _size_out);
     im2col_cpu<float>(bottom_blob.data, channels, h, w, kernel_size, kernel_size,
-            pad, pad, stride, stride, dilation, dilation, _btm_im2col.data);
+            pad, pad, stride, stride, dilation, dilation, _btm_col.data);
 
     typedef Eigen::Matrix<float, Eigen::Dynamic,Eigen::Dynamic, Eigen::RowMajor> Matrix;
     Eigen::Map<Matrix> _weight(weight_data.data,num_output,_size_ckk);
-    Eigen::Map<Matrix> _bottom(_btm_im2col.data,_size_ckk,_size_out);
+    Eigen::Map<Matrix> _bottom(_btm_col.data,_size_ckk,_size_out);
 	Eigen::Map<Matrix> _top(top_blob.data,num_output,_size_out);
 	_top = _weight * _bottom;
 

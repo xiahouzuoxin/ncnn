@@ -13,6 +13,10 @@
 // specific language governing permissions and limitations under the License.
 
 #include "deconvolution.h"
+#include "im2col.h"
+#if NCNN_EIGEN
+#include "Eigen/Dense"
+#endif
 
 namespace ncnn {
 
@@ -217,6 +221,36 @@ int Deconvolution::forward(const Mat& bottom_blob, Mat& top_blob) const
 
     const int kernel_extent = dilation * (kernel_size - 1) + 1;
 
+#if NCNN_EIGEN
+	int _size_in  = w * h;
+	int _size_ckk = num_output * kernel_size * kernel_size;
+    Mat _top_col(_size_ckk, _size_in);
+
+    typedef Eigen::Matrix<float, Eigen::Dynamic,Eigen::Dynamic, Eigen::RowMajor> MatrixRowMajor;
+    typedef Eigen::Matrix<float, Eigen::Dynamic,Eigen::Dynamic, Eigen::ColMajor> MatrixColMajor;
+    Eigen::Map<MatrixRowMajor> _weight(weight_data.data,channels,_size_ckk);
+    Eigen::Map<MatrixRowMajor> _bottom(bottom_blob.data,channels,_size_in);
+    Eigen::Map<MatrixRowMajor> _top(_top_col.data,_size_ckk,_size_in);
+	_top = _weight.transpose() * _bottom;
+
+	// cut
+    int outw = (w - 1) * stride + kernel_extent - 2 * pad;
+    int outh = (h - 1) * stride + kernel_extent - 2 * pad;
+	int _size_out = outw * outh;
+
+    top_blob.create(outw, outh, num_output);
+    if (top_blob.empty())
+        return -100;
+
+    col2im_cpu<float>(_top_col.data, num_output, outh, outw, kernel_size, kernel_size,
+            pad, pad, stride, stride, dilation, dilation, top_blob.data);
+
+	if (bias_term) {
+		Eigen::Map<MatrixRowMajor> _top(top_blob.data,num_output,_size_out);
+		Eigen::Map<Eigen::VectorXf> _bias(bias_data.data,num_output);
+		_top.colwise() += _bias;
+	}
+#else
     int outw = (w - 1) * stride + kernel_extent;
     int outh = (h - 1) * stride + kernel_extent;
 
@@ -294,6 +328,7 @@ int Deconvolution::forward(const Mat& bottom_blob, Mat& top_blob) const
         outw = top_blob.w;
         outh = top_blob.h;
     }
+#endif
 
     return 0;
 }
