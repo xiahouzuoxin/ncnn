@@ -40,6 +40,10 @@ add_definitions(-Ofast)
 
 add_definitions(-ffast-math)
 # add_definitions(-march=native)
+if(NCNN_EIGEN)
+add_definitions(-march=native)
+endif()
+
 
 # add_definitions(-flto)
 

@@ -228,10 +228,12 @@ int Deconvolution::forward(const Mat& bottom_blob, Mat& top_blob) const
 
     typedef Eigen::Matrix<float, Eigen::Dynamic,Eigen::Dynamic, Eigen::RowMajor> MatrixRowMajor;
     typedef Eigen::Matrix<float, Eigen::Dynamic,Eigen::Dynamic, Eigen::ColMajor> MatrixColMajor;
-    Eigen::Map<MatrixRowMajor> _weight(weight_data.data,channels,_size_ckk);
+    // Eigen::Map<MatrixRowMajor> _weight(weight_data.data,channels,_size_ckk);
+    Eigen::Map<MatrixColMajor> _weight(weight_data.data,_size_ckk,channels);
     Eigen::Map<MatrixRowMajor> _bottom(bottom_blob.data,channels,_size_in);
     Eigen::Map<MatrixRowMajor> _top(_top_col.data,_size_ckk,_size_in);
-	_top = _weight.transpose() * _bottom;
+	// _top = _weight.transpose() * _bottom;
+	_top = _weight * _bottom;
 
 	// cut
     int outw = (w - 1) * stride + kernel_extent - 2 * pad;

@@ -1,6 +1,7 @@
 # eigen-optimized ncnn
 
 ```
+git clone --recursive https://github.com/xiahouzuoxin/ncnn.git
 mkdir build && cd build
 cmake ../ -DNCNN_EIGEN=ON
 ```
