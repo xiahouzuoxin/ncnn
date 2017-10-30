@@ -5,15 +5,15 @@
 # Steps:
 # 1.complile ncnn using cmake first (which will genereate
 #       `layer_declaration.h`,`layer_registry.h`,`layer_type_enum.h`)
-# 2.make -f Makefile.mini
+# 2.make -j4 -f Makefile.mini
 #----------------------------------------------------------------------
 
 ifeq (,$(wildcard ./build))
-	$(error Please Compile NCNN using CMake First!)
+$(error Please Compile NCNN using CMake First!)
 endif
 
 INCLUDES += -I./src -I./src/layer -I./3rdparty/eigen -I./build/src
-LDFLAGS  += -L/usr/lib -L/usr/local/lib -lm
+LDFLAGS = 
 
 SRCDIRS = ./src ./src/layer ./src/layer/x86
 SRCEXTS = .c .C .cc .cpp .CPP .c++ .cxx .cp
@@ -31,7 +31,7 @@ CXXFLAGS  = -Wall -Wextra -fpermissive -std=c++11
 CXXFLAGS += -fopenmp -fPIC -Ofast -ffast-math -march=native 
 CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden
 
-DEBUG := 1
+DEBUG := 0
 CXX = g++
 ifeq ($(DEBUG),1)
 	CXXFLAGS += -g -D_DEBUG
