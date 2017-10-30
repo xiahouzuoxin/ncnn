@@ -1,0 +1,87 @@
+#----------------------------------------------------------------------
+# Example makefile for build project using mini-ncnn source file
+# without dependencies (even protobuf&opencv are exclude).
+# 
+# Steps:
+# 1.complile ncnn using cmake first (which will genereate
+#       `layer_declaration.h`,`layer_registry.h`,`layer_type_enum.h`)
+# 2.make -f Makefile.mini
+#----------------------------------------------------------------------
+
+ifeq (,$(wildcard ./build))
+	$(error Please Compile NCNN using CMake First!)
+endif
+
+INCLUDES += -I./src -I./src/layer -I./3rdparty/eigen -I./build/src
+LDFLAGS  += -L/usr/lib -L/usr/local/lib -lm
+
+SRCDIRS = ./src ./src/layer ./src/layer/x86
+SRCEXTS = .c .C .cc .cpp .CPP .c++ .cxx .cp
+HDREXTS = .h .H .hh .hpp .HPP .h++ .hxx .hp
+
+SOURCES = $(foreach d,$(SRCDIRS),$(wildcard $(addprefix $(d)/*,$(SRCEXTS))))
+HEADERS = $(foreach d,$(SRCDIRS),$(wildcard $(addprefix $(d)/*,$(HDREXTS))))
+OBJS    = $(addsuffix .o, $(basename $(SOURCES)))
+
+MAIN_SOURCE = ./examples/simple_fc/simple_fc.cpp
+MAIN_OBJ    = $(addsuffix .o, $(basename $(MAIN_SOURCE)))
+
+# OpenMP
+CXXFLAGS  = -Wall -Wextra -fpermissive -std=c++11
+CXXFLAGS += -fopenmp -fPIC -Ofast -ffast-math -march=native 
+CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden
+
+DEBUG := 1
+CXX = g++
+ifeq ($(DEBUG),1)
+	CXXFLAGS += -g -D_DEBUG
+else
+	CXXFLAGS += -DNDEBUG
+endif
+
+COMPILE  = $(CXX)  $(INCLUDES) $(LDFLAGS) $(CXXFLAGS) -c
+LINK     = $(CXX)  $(INCLUDES) $(LDFLAGS) $(CXXFLAGS)
+
+LIB_NAME = mini-ncnn.so
+LIB_VER  = 1.0.0
+EXE_NAME = ./examples/simple_fc/simple_fc
+
+.PHONY: all clean ctags
+
+all: $(EXE_NAME) $(LIB_NAME)
+
+# ===================================================================
+# ===================================================================
+$(LIB_NAME): $(OBJS)
+	$(LINK) $(OBJS) $(INCLUDES) $(LDFLAGS) $(CXXFLAGS) -shared -Wl,-soname,$(LIB_NAME) -o $(LIB_NAME).$(LIB_VER)
+
+$(EXE_NAME): $(OBJS) $(MAIN_OBJ)
+	$(LINK) $(OBJS) $(MAIN_OBJ) $(INCLUDES) $(LDFLAGS) $(CXXFLAGS) -o $(EXE_NAME)
+
+# ===================================================================
+# Rules For generate objects
+# ===================================================================
+
+objs_libs: $(OBJS)
+
+objs_exe: $(OBJS) $(MAIN_OBJ)
+
+%.o: %.c 
+	$(COMPILE) $< -o $@
+%.o: %.cpp
+	$(COMPILE) $< -o $@
+%.o: %.cxx
+	$(COMPILE) $< -o $@
+
+# ===================================================================
+# ctags
+# ===================================================================
+ctags: $(HEADERS) $(SOURCES) $(MAIN_SOURCE)
+	ctags --c++-kinds=+p --fields=+iaS --extra=+q -R $(HEADERS) $(SOURCES)
+
+# ===================================================================
+# Clean
+# ===================================================================
+clean:
+	rm -f $(OBJS) $(MAIN_OBJ) $(EXE_NAME) $(LIB_NAME) $(LIB_NAME).$(LIB_VER)
+
